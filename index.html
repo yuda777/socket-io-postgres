@@ -1,0 +1,24 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Socket.IO + PostgreSQL</title>
+	</head>
+	<body>
+		<h1>Real-Time Data:</h1>
+		<div id="realTimeData"></div>
+
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.js"></script>
+		<script>
+			const socket = io("http://localhost:3001");
+
+			socket.on("realTimeData", (data) => {
+				document.getElementById(
+					"realTimeData"
+				).innerText = `Current Time: ${data.time}`;
+			});
+		</script>
+	</body>
+</html>
