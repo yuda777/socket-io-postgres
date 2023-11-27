@@ -1,10 +1,12 @@
-import express from "express";
-import http from "http";
-import { Pool } from "pg"; // Import PostgreSQL's Pool from 'pg'
-import { Server, Socket, ServerOptions } from "socket.io";
+import { Server, Socket } from "socket.io";
+import { createAdapter } from "@socket.io/postgres-adapter";
+import { Pool } from "pg";
 
-const app = express();
-const server = http.createServer(app);
+const io = new Server({
+	cors: { origin: "*" },
+});
+
+// PostgreSQL connection setup
 const pool = new Pool({
 	user: "postgres",
 	host: "localhost",
@@ -12,43 +14,25 @@ const pool = new Pool({
 	password: "postgres",
 	port: 5432,
 });
-const ioOptions: Partial<
-	ServerOptions & { handlePreflightRequest: (req: any, res: any) => void }
-> = {
-	handlePreflightRequest: (req, res) => {
-		const headers = {
-			"Access-Control-Allow-Headers": "Content-Type, Authorization",
-			"Access-Control-Allow-Origin": req.headers.origin as string, // or the specific origin you want to give access to,
-			"Access-Control-Allow-Credentials": "true",
-		};
-		res.writeHead(200, headers);
-		res.end();
-	},
-};
-
-const io = new Server(server, ioOptions as ServerOptions);
 
 io.on("connection", (socket: Socket) => {
 	console.log("A user connected");
 
-	// Emit real-time data every second
+	// Emit the current timestamp from PostgreSQL every second
 	const intervalId = setInterval(() => {
-		// Replace this query with your actual query to fetch real-time data from PostgreSQL
-		const query = "SELECT NOW()";
-
-		pool.query(query, (err, result) => {
-			if (err) {
-				console.error("Error fetching real-time data:", err.message);
-				return;
+		pool.query(
+			"select user_id,name,performance_score from employee_performance order by performance_id",
+			(err, result) => {
+				if (err) {
+					console.error("Error fetching real-time data:", err.message);
+					return;
+				}
+				io.emit("realTimeData", result.rows);
+				// const currentTimestamp = result.rows[0].now;
+				// socket.emit("realTimeData", currentTimestamp);
 			}
-
-			// Assuming your result.rows contains the real-time data
-			const realTimeData = result.rows[0];
-
-			// Emit the real-time data to connected clients
-			socket.emit("realTimeData", realTimeData);
-		});
-	}, 1000); // Adjust the interval as needed
+		);
+	}, 500);
 
 	socket.on("disconnect", () => {
 		console.log("A user disconnected");
@@ -56,8 +40,5 @@ io.on("connection", (socket: Socket) => {
 	});
 });
 
-const PORT = process.env.PORT || 3000;
-
-server.listen(PORT, () => {
-	console.log(`Server is running on http://localhost:${PORT}`);
-});
+io.adapter(createAdapter(pool));
+io.listen(3000);
