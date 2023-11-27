@@ -9,10 +9,10 @@ const io = new Server(server);
 
 // PostgreSQL connection setup
 const pool = new Pool({
-	user: "your_username",
-	host: "your_host",
-	database: "your_database",
-	password: "your_password",
+	user: "postgres",
+	host: "localhost",
+	database: "dashboard",
+	password: "postgres",
 	port: 5432,
 });
 
