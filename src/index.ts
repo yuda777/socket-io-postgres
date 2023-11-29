@@ -21,7 +21,14 @@ io.on("connection", (socket: Socket) => {
 	// Emit the current timestamp from PostgreSQL every second
 	const intervalId = setInterval(() => {
 		pool.query(
-			"select user_id,name,performance_score from employee_performance order by performance_id",
+			`SELECT 
+			user_id,
+			photo,
+			CONCAT('#', colorhex) as fill,
+			SPLIT_PART(name, ' ', 1) AS name,
+			performance_score AS score 
+			FROM employee_performance 
+			ORDER BY performance_score DESC`,
 			(err, result) => {
 				if (err) {
 					console.error("Error fetching real-time data:", err.message);
@@ -32,7 +39,7 @@ io.on("connection", (socket: Socket) => {
 				// socket.emit("realTimeData", currentTimestamp);
 			}
 		);
-	}, 500);
+	}, 1000);
 
 	socket.on("disconnect", () => {
 		console.log("A user disconnected");
