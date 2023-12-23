@@ -1,6 +1,9 @@
 import { Server, Socket } from "socket.io";
 import { createAdapter } from "@socket.io/postgres-adapter";
 import { Pool } from "pg";
+import { config } from "dotenv";
+
+config();
 
 const io = new Server({
 	cors: { origin: "*" },
@@ -8,11 +11,11 @@ const io = new Server({
 
 // PostgreSQL connection setup
 const pool = new Pool({
-	user: "postgres",
-	host: "localhost",
-	database: "dashboard",
-	password: "postgres",
-	port: 5432,
+	user: process.env.DB_USER,
+	host: process.env.DB_HOST,
+	database: process.env.DB_DATABASE,
+	password: process.env.DB_PASSWORD,
+	port: +(process.env.DB_PORT ?? "5432"),
 });
 
 io.on("connection", (socket: Socket) => {
